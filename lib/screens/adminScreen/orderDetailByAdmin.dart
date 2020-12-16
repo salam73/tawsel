@@ -96,10 +96,8 @@ class OrderDetailByAdmin extends StatelessWidget {
 
                       Column(
                         children: [
-                          Expanded(
-                            child: orderDetialText(
-                                'رقم الاورد', snapshot.data['orderNumber']),
-                          ),
+                          orderDetialText(
+                              'رقم الاورد', snapshot.data['orderNumber']),
                           orderDetialText('إسم الزبون',
                               snapshot.data['customerName'] ?? ''),
                           orderDetialText('عنوان الزبون',
