@@ -30,8 +30,8 @@ class Root extends GetWidget<AuthController> {
           //    print(user['isAdmin'].toString());
           //return Home();
           // return Test2();
-          //return MainTest();
-          return AdminHome();
+          return MainTest();
+          // return AdminHome();
           // return OrdersList();
           // return UserList();
           // return OrderInput(
@@ -40,8 +40,8 @@ class Root extends GetWidget<AuthController> {
         } else {
           // return Test2();
           // return AdminHome();
-          // return MainTest();
-          return AdminHome();
+          return MainTest();
+          // return AdminHome();
         }
       },
     );
