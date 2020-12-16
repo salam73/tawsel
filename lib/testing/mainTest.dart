@@ -1,0 +1,423 @@
+import 'dart:ui';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+import 'package:get/get.dart';
+import 'package:tawsel/controllers/orderController.dart';
+import 'package:tawsel/models/order.dart';
+import 'package:tawsel/screens/adminScreen/orderDetailByAdmin.dart';
+import 'package:tawsel/screens/appByUser/home.dart';
+import 'package:intl/intl.dart';
+import 'dart:ui' as ui;
+
+import 'package:tawsel/services/fireDb.dart';
+
+// ignore: must_be_immutable
+class MainTest extends StatelessWidget {
+/*   Future<Widget> getUsers() async {
+    await FirebaseFirestore.instance
+        .collection('users')
+        .orderBy('deliveryToCity', descending: true)
+        .get()
+        .then((e) => {
+              e.docs.map(
+                (e) => Text(
+                  e.data()['shopName'],
+                ),
+              )
+            });
+    return Text('hel');
+  } */
+
+  // ignore: unused_element
+  _onPressed() {
+    FirebaseFirestore.instance
+        .collection("users")
+        // .orderBy('deliveryToCity')
+        .get()
+        .then((querySnapshot) {
+      querySnapshot.docs.forEach((result) {
+        print('userid' + result.id);
+
+//.set({'statusTitle': 'non'}, SetOptions(merge: true))
+        FirebaseFirestore.instance
+            .collection('users')
+            .doc(result.id)
+            .collection('orders')
+            .get()
+            .then((value) => {
+                  value.docs.forEach((element) {
+                    print('orderid' + element.id);
+                    FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(result.id)
+                        .collection('orders')
+                        .doc(element.id)
+                        .set({'status': 'non'}, SetOptions(merge: true)).then(
+                            (value) => {});
+                  })
+                });
+      });
+    });
+  }
+
+  var sumOfAmount = 0.obs;
+  var orderStatus = ''.obs;
+
+  String orderCondition = '';
+  var fireDb = FireDb();
+
+  OrderModel orderModel = OrderModel();
+  OrderController orderController = Get.put(OrderController());
+
+  void getAllAmount({String status}) {
+    orderStatus.value = status;
+    var g = fireDb.allOrderStream(status: status);
+    g.forEach((element) {
+      int start = 0;
+      element.forEach((element) {
+        start = start + element.amountAfterDelivery;
+        sumOfAmount.value = start;
+        // print('foreach' + start.toString());
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    //getAllAmount(status: Get.find<OrderController>().orderStatus.value);
+    //_onPressed();
+    // orderController.orderStatus.value = 'non';
+    return Directionality(
+      textDirection: ui.TextDirection.rtl,
+      child: Scaffold(
+        appBar: AppBar(),
+        body: Center(
+            child: Column(
+          children: [
+            Obx(
+              () => Text(
+                orderStatus.toString(),
+                style: TextStyle(fontSize: 25),
+              ),
+            ),
+            SizedBox(
+              height: 20,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                statusButton(
+                  title: 'جاهز',
+                  controller: orderController,
+                  status: 'جاهز',
+                ),
+                statusButton(
+                    title: 'راجع', controller: orderController, status: 'راجع'),
+                statusButton(
+                    title: 'واصل', controller: orderController, status: 'واصل'),
+                statusButton(
+                    title: 'مؤجل', controller: orderController, status: 'مؤجل'),
+                statusButton(
+                    title: 'قيد التسليم',
+                    controller: orderController,
+                    status: 'مشكلة'),
+                SizedBox(
+                  height: 20,
+                )
+              ],
+            ),
+            SizedBox(
+              height: 20,
+            ),
+            Obx(() => Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    SizedBox(
+                      width: 20,
+                    ),
+                    Expanded(child: Text('الرقم')),
+                    Expanded(child: Text('الاسم')),
+                    Expanded(child: Text('المحافظة')),
+                    Expanded(child: Text('المبلغ')),
+                    Expanded(child: Text('التاريخ')),
+                    orderStatus.value != 'تمت'
+                        ? Expanded(child: Text('الحالة'))
+                        : Container()
+                  ],
+                )),
+            Divider(
+              thickness: 1,
+              color: Colors.black,
+            ),
+            SizedBox(
+              height: 10,
+            ),
+            GetX<OrderController>(
+              // init: Get.put(OrderController()),
+              builder: (OrderController orderController) {
+                // orderController.sumAmount.value = 0;
+                if (orderController != null &&
+                    orderController.allOrders != null) {
+                  return Expanded(
+                    child: ListView.builder(
+                      itemCount: orderController.allOrders.length,
+                      itemBuilder: (_, index) {
+                        orderController.sumAmount.value =
+                            orderController.sumAmount.value +
+                                orderController
+                                    .allOrders[index].amountAfterDelivery;
+
+                        return Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                SizedBox(
+                                  width: 20,
+                                ),
+                                Expanded(
+                                    child: InkWell(
+                                  onTap: () {
+                                    Get.to(OrderDetailByAdmin(
+                                      orderId: orderController
+                                          .allOrders[index].orderId,
+                                      userId: orderController
+                                          .allOrders[index].byUserId,
+                                    ));
+                                  },
+                                  child: Text(orderController
+                                      .allOrders[index].orderNumber),
+                                )),
+                                Expanded(
+                                    child: Text(orderController
+                                        .allOrders[index].customerName)),
+                                Expanded(
+                                    child: Text(orderController
+                                        .allOrders[index].deliveryToCity)),
+                                Expanded(
+                                    child: Text(orderController
+                                        .allOrders[index].amountAfterDelivery
+                                        .toString())),
+                                Expanded(
+                                  child: Text(
+                                    DateFormat('yyyy-MM-dd').format(
+                                        orderController
+                                            .allOrders[index].dateCreated
+                                            .toDate()),
+                                  ),
+                                ),
+                                orderController.allOrders[index].status != 'تمت'
+                                    ? Expanded(
+                                        child: InkWell(
+                                        onTap: () {
+                                          print(orderController
+                                              .allOrders[index].orderId);
+
+                                          // orderModel.orderType = 'جاهز';
+                                          // orderModel.orderType = 'راجع';
+
+                                          /*     orderModel =
+                                              orderController.allOrders[index];
+                                          orderModel.status = 'راجع';
+
+                                          FireDb().updateOrder2(
+                                              orderModel,
+                                              orderController
+                                                  .allOrders[index].orderId); */
+                                          Get.defaultDialog(
+                                              title: 'تغير الحالة إلى',
+                                              middleText: orderController
+                                                  .allOrders[index].orderId);
+                                        },
+                                        child: Text(orderController
+                                            .allOrders[index].statusTitle),
+                                      ))
+                                    : Container()
+                              ],
+                            ),
+                            Divider(
+                              thickness: 2,
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  );
+                } else {
+                  return Container(
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        value: 10,
+                      ),
+                    ),
+                  );
+                }
+              },
+            ),
+            Obx(() => Text(sumOfAmount.value.toString())),
+            SizedBox(
+              height: 30,
+            ),
+          ],
+        )),
+      ),
+    );
+  }
+
+  Widget statusButton(
+      {String title, OrderController controller, String status}) {
+    return RaisedButton(
+      child: Text(title),
+      onPressed: () {
+        controller.orderStatus.value = status;
+        controller.streamStatus(status: status);
+        getAllAmount(status: status);
+      },
+    );
+  }
+}
+
+/*
+class GetUserName extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    CollectionReference users = FirebaseFirestore.instance.collection('users');
+
+    return FutureBuilder<DocumentSnapshot>(
+      future: users.doc('YdkWfwATe6Q2DWsWey2v918x1Il2').get(),
+      builder:
+          (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
+        if (snapshot.hasError) {
+          return Text("Something went wrong");
+        }
+
+        if (snapshot.connectionState == ConnectionState.done) {
+          Map<String, dynamic> data = snapshot.data.data();
+          return Text("shop Name: ${data['shopName']} ");
+        }
+
+        return Text("loading");
+      },
+    );
+  }
+}
+
+class UserInformation extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    CollectionReference users = FirebaseFirestore.instance.collection('orders')
+        //.orderBy('deliveryToCity')
+        ;
+
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              flex: 2,
+              child: Text('رقم الطلب'),
+            ),
+            Expanded(
+              flex: 2,
+              child: Text('المبلغ'),
+            ),
+            Expanded(
+              flex: 2,
+              child: Text(' المحافظة'),
+            ),
+          ],
+        ),
+        Expanded(
+          child: StreamBuilder(
+            stream: users.snapshots(),
+            builder: (BuildContext context, snapshot) {
+              if (snapshot.hasError) {
+                return Text('Something went wrong');
+              }
+
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Text("Loading");
+              }
+
+              return ListView(
+                children: snapshot.data.docs.map((DocumentSnapshot document) {
+                  return Row(
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: Text(document.data()['orderNumber'].toString()),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Text(
+                            document.data()['amountAfterDelivery'].toString()),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child:
+                            Text(document.data()['deliveryToCity'].toString()),
+                      ),
+                      Text(document.data()['deliveryToCity'])
+                    ],
+                  );
+
+                  //   Card(
+                  //   child: ListTile(
+                  //     title: Text(
+                  //         document.data()['amountAfterDelivery'].toString()),
+                  //     subtitle: Text(document.data()['deliveryToCity']),
+                  //     leading: Text(document.data()['customerName']),
+                  //     trailing: Text(document.data()['customerAddress']),
+                  //   ),
+                  //
+                  // );
+                }).toList(),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class MyTest extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GetX<OrderController>(
+      init: Get.put<OrderController>(OrderController()),
+      builder: (OrderController orderController) {
+        if (orderController != null && orderController.allOrders != null) {
+          return Expanded(
+            child: ListView.builder(
+              itemCount: orderController.allOrders.length,
+              itemBuilder: (_, index) {
+                return Text(orderController.allOrders[index].amountAfterDelivery
+                    .toString());
+              },
+            ),
+          );
+        } else {
+          return Container(
+              child: Center(
+                  child: CircularProgressIndicator(
+            value: 10,
+          )));
+        }
+      },
+    );
+
+
+
+
+    
+  }
+
+
+  
+}
+
+ */
