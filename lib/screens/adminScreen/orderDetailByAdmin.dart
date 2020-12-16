@@ -93,7 +93,7 @@ class OrderDetailByAdmin extends StatelessWidget {
                           return Text(snapshot.data['shopName']);
                         },
                       ),
-
+                      // ترتيب الجداول
                       Column(
                         children: [
                           orderDetialText(
