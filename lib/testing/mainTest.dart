@@ -65,9 +65,12 @@ class MainTest extends StatelessWidget {
 
   var sumOfAmount = 0.obs;
   var orderStatus = ''.obs;
+  var _value = 0.obs;
 
   String orderCondition = '';
   var fireDb = FireDb();
+
+  var _listOption = ['مؤجل', 'واصل', 'راجع', 'جاهز', 'مشكلة'];
 
   OrderModel orderModel = OrderModel();
   OrderController orderController = Get.put(OrderController());
@@ -87,7 +90,7 @@ class MainTest extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    //getAllAmount(status: Get.find<OrderController>().orderStatus.value);
+    getAllAmount(status: Get.find<OrderController>().orderStatus.value);
     //_onPressed();
     // orderController.orderStatus.value = 'non';
     return Directionality(
@@ -106,28 +109,37 @@ class MainTest extends StatelessWidget {
             SizedBox(
               height: 20,
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                statusButton(
-                  title: 'جاهز',
-                  controller: orderController,
-                  status: 'جاهز',
-                ),
-                statusButton(
-                    title: 'راجع', controller: orderController, status: 'راجع'),
-                statusButton(
-                    title: 'واصل', controller: orderController, status: 'واصل'),
-                statusButton(
-                    title: 'مؤجل', controller: orderController, status: 'مؤجل'),
-                statusButton(
-                    title: 'قيد التسليم',
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  statusButton(
+                    title: 'جاهز',
                     controller: orderController,
-                    status: 'مشكلة'),
-                SizedBox(
-                  height: 20,
-                )
-              ],
+                    status: 'جاهز',
+                  ),
+                  statusButton(
+                      title: 'راجع',
+                      controller: orderController,
+                      status: 'راجع'),
+                  statusButton(
+                      title: 'واصل',
+                      controller: orderController,
+                      status: 'واصل'),
+                  statusButton(
+                      title: 'مؤجل',
+                      controller: orderController,
+                      status: 'مؤجل'),
+                  statusButton(
+                      title: 'قيد التسليم',
+                      controller: orderController,
+                      status: 'مشكلة'),
+                  SizedBox(
+                    height: 20,
+                  )
+                ],
+              ),
             ),
             SizedBox(
               height: 20,
@@ -228,7 +240,50 @@ class MainTest extends StatelessWidget {
                                               orderController
                                                   .allOrders[index].orderId); */
                                           Get.defaultDialog(
-                                              title: 'تغير الحالة إلى',
+
+                                              //confirm: Text('ok'),
+                                              textConfirm: 'ok',
+                                              confirmTextColor: Colors.white,
+                                              onConfirm: () {
+                                                orderModel = orderController
+                                                    .allOrders[index];
+                                                orderModel.status =
+                                                    _listOption[_value.value];
+
+                                                FireDb().updateOrder2(
+                                                    orderModel,
+                                                    orderController
+                                                        .allOrders[index]
+                                                        .orderId);
+                                                print(
+                                                    _listOption[_value.value]);
+                                                Get.back();
+                                              },
+                                              title:
+                                                  'نغير حالة الطلب :${orderController.allOrders[index].orderNumber}',
+                                              content: Column(
+                                                children: <Widget>[
+                                                  for (int i = 0; i < 5; i++)
+                                                    ListTile(
+                                                      title: Text(
+                                                        _listOption[i],
+                                                      ),
+                                                      leading: Obx(() => Radio(
+                                                            value: i,
+                                                            groupValue:
+                                                                _value.value,
+                                                            activeColor: Color(
+                                                                0xFF6200EE),
+                                                            onChanged: (value) {
+                                                              _value.value =
+                                                                  value;
+
+                                                              print(_value);
+                                                            },
+                                                          )),
+                                                    ),
+                                                ],
+                                              ),
                                               middleText: orderController
                                                   .allOrders[index].orderId);
                                         },
@@ -257,7 +312,13 @@ class MainTest extends StatelessWidget {
                 }
               },
             ),
-            Obx(() => Text(sumOfAmount.value.toString())),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('المجموع: '),
+                Obx(() => Text(sumOfAmount.value.toString())),
+              ],
+            ),
             SizedBox(
               height: 30,
             ),

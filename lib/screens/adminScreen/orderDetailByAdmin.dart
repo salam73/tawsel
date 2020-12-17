@@ -56,6 +56,7 @@ class OrderDetailByAdmin extends StatelessWidget {
             children: <Widget>[
               Container(
                 alignment: Alignment.center,
+                height: 60,
                 child: Text(
                   "التفاصيل",
                   style: TextStyle(
@@ -137,12 +138,15 @@ class OrderDetailByAdmin extends StatelessWidget {
 
   Widget orderDetialText(String name, String detailName) {
     return Padding(
-      padding: EdgeInsets.only(right: 18.0),
+      padding: EdgeInsets.only(right: 18.0, top: 10),
       child: Container(
         alignment: Alignment.centerRight,
-        child: Text(
-          '$name: $detailName',
-          style: TextStyle(fontSize: 27),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            '$name: $detailName',
+            style: TextStyle(fontSize: 27),
+          ),
         ),
       ),
     );
